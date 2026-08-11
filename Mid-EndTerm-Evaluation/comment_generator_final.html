@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comment Generator</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/docx@7.1.0/build/index.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #ec4899;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding-bottom: 5rem;
+        }
+
+        header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 4rem 1rem;
+            text-align: center;
+            clip-path: polygon(0 0, 100% 0, 100% 85%, 0% 100%);
+            margin-bottom: -2rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        .app-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+        }
+
+        .step-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2.5rem;
+            margin-top: 2rem;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 32px;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+        }
+
+        textarea,
+        input[type="text"] {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        textarea:focus,
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1.75rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-size: 0.95rem;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .btn-success {
+            background: #22c55e;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #16a34a;
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            color: #ef4444;
+            background: transparent;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-danger:hover {
+            color: #b91c1c;
+        }
+
+        .btn-lg {
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+        }
+
+        .pool-item-box {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem;
+            border-radius: 8px;
+            background: #fdfdfd;
+            border: 1px solid #f1f5f9;
+        }
+
+        .pool-id {
+            width: 30px;
+            font-weight: 700;
+            color: var(--primary);
+            padding-top: 0.75rem;
+        }
+
+        .criteria-box {
+            border: 1px dashed var(--border);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            background: #fafafa;
+        }
+
+        .level-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+            align-items: flex-start;
+        }
+
+        .level-label {
+            width: 80px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            padding-top: 0.75rem;
+        }
+
+        .helper-text {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        .preview-item {
+            background: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .preview-item h4 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-dark);
+        }
+
+        .preview-item textarea {
+            background: white;
+        }
+
+        #toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #1e293b;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transform: translateY(200%);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+        }
+
+        #toast.show {
+            transform: translateY(0);
+        }
+
+        .save-controls {
+            margin-top: 3rem;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            padding-top: 2rem;
+        }
+
+        .tabs {
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 1rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 1rem 0;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .option-list {
+            list-style: none;
+        }
+
+        .option-list li {
+            background: #fdfdfd;
+            border: 1px solid #f1f5f9;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .option-list .opt-id {
+            color: var(--primary);
+            font-weight: 700;
+            min-width: 24px;
+        }
+
+        .toggle-options-btn {
+            margin-bottom: 1rem;
+        }
+
+        .options-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+
+        .options-panel.open {
+            display: block;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        @media (max-width: 768px) {
+
+            .grid-2,
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .app-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="container">
+            <h1 class="app-title">Comment Generator</h1>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- STEP 1: INTRODUCTIONS -->
+        <section class="step-card">
+            <span class="step-number">1</span>
+            <h2>Introductions</h2>
+            <p class="helper-text" style="margin-bottom: 1.5rem;">These will be placed at the very beginning of the
+                comment (e.g., "Hi", "Hello", "Greetings").</p>
+            <div class="form-group">
+                <div id="introductions-pool"></div>
+                <button class="btn btn-outline" style="font-size: 0.8rem;" onclick="addPoolItem('introductions-pool')">+
+                    Add Intro</button>
+            </div>
+        </section>
+
+        <!-- STEP 2: GREETINGS & CLOSINGS -->
+        <section class="step-card">
+            <span class="step-number">2</span>
+            <h2>Opening & Closing Statements</h2>
+            <p class="helper-text" style="margin-bottom: 1.5rem;">These will be selected randomly for each student when
+                generating the comments.</p>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Greetings</label>
+                    <div id="greetings-pool"></div>
+                    <button class="btn btn-outline" style="font-size: 0.8rem;" onclick="addPoolItem('greetings-pool')">+
+                        Add Greeting</button>
+                </div>
+                <div class="form-group">
+                    <label>Farewells</label>
+                    <div id="farewells-pool"></div>
+                    <button class="btn btn-outline" style="font-size: 0.8rem;" onclick="addPoolItem('farewells-pool')">+
+                        Add Farewell</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- STEP 3: CRITERIA -->
+        <section class="step-card">
+            <span class="step-number">3</span>
+            <h2>Academic Criteria</h2>
+            <div id="criteria-container"></div>
+            <button class="btn btn-outline" onclick="addCriterion()">+ Add New Criterion</button>
+        </section>
+
+        <!-- STEP 4: QUALITIES & OPPORTUNITIES -->
+        <section class="step-card">
+            <span class="step-number">4</span>
+            <h2>Personality & Growth Pools</h2>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Student Qualities</label>
+                    <div id="qualities-pool"></div>
+                    <button class="btn btn-outline" style="font-size: 0.8rem;" onclick="addPoolItem('qualities-pool')">+
+                        Add Quality</button>
+                </div>
+                <div class="form-group">
+                    <label>Areas for Opportunity</label>
+                    <div id="opportunities-pool"></div>
+                    <button class="btn btn-outline" style="font-size: 0.8rem;"
+                        onclick="addPoolItem('opportunities-pool')">+ Add Opportunity</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- STEP 5: STUDENT LIST -->
+        <section class="step-card">
+            <span class="step-number">5</span>
+            <h2>Student Roster & Scores</h2>
+
+
+
+            <div class="form-group excel-upload-group">
+                <label for="excel-upload" style="margin-bottom: 0.5rem; display: block; font-weight: 600;">Upload
+                    Student List (.xlsx, .numbers)</label>
+                <input type="file" id="excel-upload" accept=".xlsx, .xls, .numbers" onchange="handleExcelUpload(event)"
+                    style="margin-bottom: 1rem;">
+                <div id="sheet-selector-container" style="display: none;">
+                    <label style="margin-bottom: 0.5rem; display: block; font-weight: 600;">Select Sheet</label>
+                    <select id="sheet-selector" onchange="handleSheetSelection()"
+                        style="width:100%; padding:0.75rem; border-radius:8px; border:1px solid var(--border); font-family:inherit;"></select>
+                </div>
+            </div>
+
+            <div id="dynamic-students-container" style="margin-top: 1.5rem; display: none;">
+                <!-- Student rows will be generated here -->
+            </div>
+
+            <div style="text-align: center; display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
+                <button class="btn btn-primary btn-lg" onclick="generatePreview()">Generate All Comments</button>
+                <button class="btn btn-success btn-lg" onclick="saveConfiguration()">Save Configuration</button>
+            </div>
+        </section>
+
+        <!-- STEP 6: PREVIEW -->
+        <section id="preview-section" class="step-card" style="display: none;">
+            <span class="step-number">6</span>
+            <h2>Review & Export</h2>
+            <div id="preview-container"></div>
+            <div style="text-align: center; margin-top: 2rem; display: flex; justify-content: center; gap: 1rem;">
+                <button class="btn btn-primary btn-lg" id="btn-download" onclick="downloadDocx()">Download .docx
+                    Document</button>
+                <button class="btn btn-outline btn-lg" id="btn-download-txt" onclick="downloadTxt()">Download .txt
+                    Document</button>
+            </div>
+        </section>
+
+        <div class="save-controls">
+            <p class="helper-text" style="margin-bottom: 1rem;">Save your current layout, criteria, and text to use them
+                in the next session.</p>
+            <button class="btn btn-outline" onclick="clearSavedData()">Reset to Defaults</button>
+        </div>
+    </div>
+
+    <div id="toast">Changes saved successfully.</div>
+
+    <script>
+        const CONFIG_KEY = 'comment_gen_refined_config';
+
+        // --- UI Updates ---
+        function updateDynamicLegend() {
+            if (typeof renderStudentRows === 'function') {
+                renderStudentRows();
+            }
+        }
+
+        // --- Component Creation ---
+        function addPoolItem(containerId, initialValue = "") {
+            const container = document.getElementById(containerId);
+            const id = container.children.length + 1;
+            const div = document.createElement('div');
+            div.className = 'pool-item-box';
+            div.innerHTML = `
+            <span class="pool-id">${id}</span>
+            <textarea class="pool-item-text" rows="2" oninput="updateDynamicLegend()">${initialValue}</textarea>
+            <button class="btn-danger" onclick="this.parentElement.remove(); reindexPool('${containerId}'); updateDynamicLegend()">×</button>
+        `;
+            container.appendChild(div);
+            updateDynamicLegend();
+        }
+
+        function reindexPool(containerId) {
+            const container = document.getElementById(containerId);
+            Array.from(container.children).forEach((child, index) => {
+                child.querySelector('.pool-id').innerText = index + 1;
+            });
+        }
+
+        function addLevel(btn, initialValue = "") {
+            const levelsList = btn.previousElementSibling;
+            const levelNum = levelsList.children.length + 1;
+            const div = document.createElement('div');
+            div.className = 'level-row';
+            div.innerHTML = `
+                <span class="level-label">Level ${levelNum}</span>
+                <textarea class="crit-level-desc" rows="2" oninput="updateDynamicLegend()">${initialValue}</textarea>
+                <button class="btn-danger" style="margin-top: 0.75rem;" onclick="const list = this.parentElement.parentElement; this.parentElement.remove(); reindexLevels(list); updateDynamicLegend();">×</button>
+            `;
+            levelsList.appendChild(div);
+            updateDynamicLegend();
+        }
+
+        function reindexLevels(levelsList) {
+            Array.from(levelsList.children).forEach((child, index) => {
+                const label = child.querySelector('.level-label');
+                if (label) label.innerText = `Level ${index + 1}`;
+            });
+        }
+
+        function addCriterion(initialData = null) {
+            const container = document.getElementById('criteria-container');
+            const div = document.createElement('div');
+            div.className = 'criteria-box';
+
+            const name = initialData ? initialData.name : "";
+            const levels = initialData ? initialData.levels : ["", ""];
+
+            div.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <input type="text" class="crit-name" placeholder="Criterion Name" value="${name}" oninput="updateDynamicLegend()" style="font-weight: 700; font-size: 1.1rem; width: 80%;">
+                <button class="btn-danger" onclick="this.parentElement.parentElement.remove(); updateDynamicLegend()">Remove</button>
+            </div>
+            <div class="levels-list"></div>
+            <button class="btn btn-outline" style="font-size: 0.8rem; padding: 0.4rem 1rem;" onclick="addLevel(this)">+ Add Level</button>
+        `;
+            container.appendChild(div);
+
+            const levelsListBtn = div.querySelector('button.btn-outline');
+            levels.forEach(val => addLevel(levelsListBtn, val));
+            updateDynamicLegend();
+        }
+
+        // --- Persistence Logic ---
+        function saveConfiguration() {
+            const config = {
+                introductions: getPoolData('introductions-pool'),
+                greetings: getPoolData('greetings-pool'),
+                farewells: getPoolData('farewells-pool'),
+                qualities: getPoolData('qualities-pool'),
+                opportunities: getPoolData('opportunities-pool'),
+                criteria: Array.from(document.querySelectorAll('.criteria-box')).map(box => ({
+                    name: box.querySelector('.crit-name').value,
+                    levels: Array.from(box.querySelectorAll('.crit-level-desc')).map(t => t.value)
+                }))
+            };
+            localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+            showToast("Configuration saved for the next session!");
+        }
+
+        function loadConfiguration() {
+            const saved = localStorage.getItem(CONFIG_KEY);
+            if (!saved) {
+                loadDefaults();
+                return;
+            }
+
+            try {
+                const config = JSON.parse(saved);
+
+                // Clear existing
+                document.getElementById('introductions-pool').innerHTML = '';
+                document.getElementById('greetings-pool').innerHTML = '';
+                document.getElementById('farewells-pool').innerHTML = '';
+                document.getElementById('qualities-pool').innerHTML = '';
+                document.getElementById('opportunities-pool').innerHTML = '';
+                document.getElementById('criteria-container').innerHTML = '';
+
+                if (config.introductions) config.introductions.forEach(v => addPoolItem('introductions-pool', v));
+                config.greetings.forEach(v => addPoolItem('greetings-pool', v));
+                config.farewells.forEach(v => addPoolItem('farewells-pool', v));
+                config.qualities.forEach(v => addPoolItem('qualities-pool', v));
+                config.opportunities.forEach(v => addPoolItem('opportunities-pool', v));
+                config.criteria.forEach(c => addCriterion(c));
+
+                updateDynamicLegend();
+                showToast("Welcome back! Configuration loaded.");
+            } catch (e) {
+                console.error("Load fail", e);
+                loadDefaults();
+            }
+        }
+
+        function loadDefaults() {
+            // Default Introductions
+            [
+                "Hi",
+                "Hello",
+                "Greetings"
+            ].forEach(v => addPoolItem('introductions-pool', v));
+
+            // 7 Default English Greetings ensuring name fluency
+            [
+                "It is a true pleasure to address",
+                "I am very proud to share these comments regarding the progress of",
+                "It is very pleasant to reflect on the great class work of",
+                "I greatly appreciate the dedication and effort shown by",
+                "It is inspiring to see the academic and personal development of",
+                "I am very excited to highlight the recent achievements of",
+                "It is a pleasure to present this performance evaluation of"
+            ].forEach(v => addPoolItem('greetings-pool', v));
+
+            // 7 Default English Farewells
+            [
+                "I encourage you to continue cultivating that curiosity that characterizes you, you have great potential ahead!",
+                "Keep trusting your abilities; every challenge is an opportunity to learn something new and important.",
+                "Maintain that positive and persevering attitude, success is the sum of small daily efforts.",
+                "Never stop asking questions or seeking your own path, your perspective is very valuable.",
+                "I fully trust that you will continue reaching your goals if you maintain this level of commitment.",
+                "Remember that mistakes are part of learning, keep moving forward with the same determination.",
+                "I hope you continue to shine and share your talent with others, excellent job!"
+            ].forEach(v => addPoolItem('farewells-pool', v));
+
+            addCriterion({
+                name: "Comprehension and Analysis",
+                levels: ["Shows difficulty in understanding basic concepts.", "Manages to superficially understand the topics presented.", "Adequately understands and can apply the concepts."]
+            });
+
+            ["Demonstrates a great level of collaboration in a team.", "Always shows initiative and curiosity in every topic.", "Shows a deep analysis and argues their ideas well.", "Reflects a lot of emotional maturity in their daily tasks."].forEach(v => addPoolItem('qualities-pool', v));
+            ["Could benefit from participating a little more in class.", "It is advised to review your answers before submitting them.", "It is recommended to better organize assignment times.", "Opportunity to take more advantage of consultations with teachers."].forEach(v => addPoolItem('opportunities-pool', v));
+            updateDynamicLegend();
+        }
+
+        function clearSavedData() {
+            if (confirm("Are you sure you want to reset everything to defaults? This will clear your saved settings.")) {
+                localStorage.removeItem(CONFIG_KEY);
+                location.reload();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadConfiguration);
+
+        // --- Helper ---
+        function getPoolData(id) {
+            return Array.from(document.getElementById(id).querySelectorAll('.pool-item-text')).map(t => t.value.trim());
+        }
+
+        // --- Excel Handling & Dynamic UI ---
+        let excelWorkbook = null;
+        let studentNames = [];
+        let currentSheetName = "";
+
+        function handleExcelUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const data = new Uint8Array(e.target.result);
+                excelWorkbook = XLSX.read(data, { type: 'array' });
+
+                const sheetSelector = document.getElementById('sheet-selector');
+                sheetSelector.innerHTML = '';
+                excelWorkbook.SheetNames.forEach(name => {
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    opt.innerText = name;
+                    sheetSelector.appendChild(opt);
+                });
+
+                document.getElementById('sheet-selector-container').style.display = 'block';
+                handleSheetSelection();
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function handleSheetSelection() {
+            if (!excelWorkbook) return;
+            const sheetName = document.getElementById('sheet-selector').value;
+            currentSheetName = sheetName;
+            const worksheet = excelWorkbook.Sheets[sheetName];
+            const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+            studentNames = [];
+            for (let i = 0; i < json.length; i++) {
+                const row = json[i];
+                if (row && row.length > 0 && row[0] && typeof row[0] === 'string') {
+                    const name = row[0].trim();
+                    // Basic heuristic to skip obvious headers
+                    const lowerName = name.toLowerCase();
+                    if (lowerName !== 'name' && lowerName !== 'student' && lowerName !== 'alumno' && lowerName !== 'nombre' && name.length >= 2) {
+                        studentNames.push(name);
+                    }
+                }
+            }
+
+            renderStudentRows();
+        }
+
+        function renderStudentRows() {
+            const container = document.getElementById('dynamic-students-container');
+            container.innerHTML = '';
+            if (studentNames.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            const criteriaDivs = document.querySelectorAll('.criteria-box');
+            const criteriaNames = Array.from(criteriaDivs).map((div, i) => div.querySelector('.crit-name').value.trim() || `C${i + 1}`);
+            const criteriaLevelsText = Array.from(criteriaDivs).map(div => Array.from(div.querySelectorAll('.crit-level-desc')).map(t => t.value.trim() || '(Empty)'));
+
+            const qualitiesText = getPoolData('qualities-pool');
+            const opportunitiesText = getPoolData('opportunities-pool');
+
+            let html = '';
+
+            studentNames.forEach((name, index) => {
+                let rowHtml = `<div class="student-row" data-name="${name}" style="background: #fcfcfc; border: 1px solid var(--border); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <h4 style="margin-bottom: 1rem; color: var(--primary-dark); font-size: 1.1rem;">${name}</h4>
+                <div class="student-grades-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem;">`;
+
+                criteriaNames.forEach((cName, cIdx) => {
+                    rowHtml += `<div><label style="font-size:0.85rem; display:block; margin-bottom:0.25rem; font-weight: 600;">${cName}</label><select class="grade-select" data-type="criteria" data-idx="${cIdx}" style="width:100%; padding:0.5rem; border-radius:6px; border:1px solid var(--border);">`;
+                    rowHtml += `<option value="">-- Select --</option>`;
+                    criteriaLevelsText[cIdx].forEach((text, lIdx) => {
+                        const shortText = text.length > 50 ? text.substring(0, 47) + '...' : text;
+                        rowHtml += `<option value="${lIdx + 1}" title="${text.replace(/"/g, '&quot;')}">${shortText}</option>`;
+                    });
+                    rowHtml += `</select></div>`;
+                });
+
+                rowHtml += `<div><label style="font-size:0.85rem; display:block; margin-bottom:0.25rem; font-weight: 600;">Quality</label><select class="grade-select" data-type="quality" style="width:100%; padding:0.5rem; border-radius:6px; border:1px solid var(--border);">`;
+                rowHtml += `<option value="">-- Select --</option>`;
+                qualitiesText.forEach((text, qIdx) => {
+                    const shortText = text.length > 50 ? text.substring(0, 47) + '...' : (text || `Option ${qIdx + 1}`);
+                    rowHtml += `<option value="${qIdx + 1}" title="${text.replace(/"/g, '&quot;')}">${shortText}</option>`;
+                });
+                rowHtml += `</select></div>`;
+
+                rowHtml += `<div><label style="font-size:0.85rem; display:block; margin-bottom:0.25rem; font-weight: 600;">Opportunity</label><select class="grade-select" data-type="opportunity" style="width:100%; padding:0.5rem; border-radius:6px; border:1px solid var(--border);">`;
+                rowHtml += `<option value="">-- Select --</option>`;
+                opportunitiesText.forEach((text, oIdx) => {
+                    const shortText = text.length > 50 ? text.substring(0, 47) + '...' : (text || `Option ${oIdx + 1}`);
+                    rowHtml += `<option value="${oIdx + 1}" title="${text.replace(/"/g, '&quot;')}">${shortText}</option>`;
+                });
+                rowHtml += `</select></div>`;
+
+                rowHtml += `</div></div>`;
+                html += rowHtml;
+            });
+
+            container.innerHTML = html;
+            container.style.display = 'block';
+        }
+
+
+        // --- Comment Generation ---
+        function generatePreview() {
+            const studentRows = document.querySelectorAll('.student-row');
+            if (studentRows.length === 0) {
+                alert("Please upload an Excel file and select a sheet with student names first.");
+                return;
+            }
+
+            const introductions = getPoolData('introductions-pool');
+            const greetings = getPoolData('greetings-pool');
+            const farewells = getPoolData('farewells-pool');
+            const qualities = getPoolData('qualities-pool');
+            const opportunities = getPoolData('opportunities-pool');
+
+            const criteriaDivs = document.querySelectorAll('.criteria-box');
+            const allCriteria = Array.from(criteriaDivs).map(div =>
+                Array.from(div.querySelectorAll('.crit-level-desc')).map(t => t.value.trim())
+            );
+
+            const container = document.getElementById('preview-container');
+            container.innerHTML = '';
+            let hasContent = false;
+
+            studentRows.forEach((row, lineIndex) => {
+                const rawName = row.getAttribute('data-name');
+                let name = rawName;
+                if (rawName && rawName.includes(',')) {
+                    const afterComma = rawName.substring(rawName.indexOf(',') + 1).trim();
+                    name = afterComma.split(' ')[0];
+                }
+                const selects = row.querySelectorAll('.grade-select');
+
+                hasContent = true;
+
+                const iIdx = Math.floor(Math.random() * Math.max(1, introductions.length));
+                const gIdx = Math.floor(Math.random() * Math.max(1, greetings.length));
+                const fIdx = Math.floor(Math.random() * Math.max(1, farewells.length));
+
+                let critScores = [];
+                let qScore = NaN;
+                let oScore = NaN;
+
+                selects.forEach(sel => {
+                    const val = parseInt(sel.value);
+                    if (sel.getAttribute('data-type') === 'criteria') {
+                        critScores.push(isNaN(val) ? 1 : val); // fallback to 1 if not selected
+                    } else if (sel.getAttribute('data-type') === 'quality') {
+                        qScore = val;
+                    } else if (sel.getAttribute('data-type') === 'opportunity') {
+                        oScore = val;
+                    }
+                });
+
+                const qIdx = !isNaN(qScore) ? qScore - 1 : (lineIndex % Math.max(1, qualities.length));
+                const oIdx = !isNaN(oScore) ? oScore - 1 : (lineIndex % Math.max(1, opportunities.length));
+
+                let builtComment = "";
+                const introBase = introductions[iIdx] || "Hello";
+                const greetBase = greetings[gIdx] ? greetings[gIdx] + " " : "";
+
+                // Incorporating name fluency
+                builtComment += `${introBase}, ${name.trim()}:\n${greetBase}`;
+
+                critScores.forEach((score, cIdx) => {
+                    const levelIdx = score - 1;
+                    if (allCriteria[cIdx] && allCriteria[cIdx][levelIdx]) {
+                        builtComment += allCriteria[cIdx][levelIdx] + " ";
+                    }
+                });
+
+                if (qualities[qIdx]) builtComment += qualities[qIdx] + " ";
+                if (opportunities[oIdx]) builtComment += opportunities[oIdx] + " ";
+                if (farewells[fIdx]) builtComment += farewells[fIdx];
+
+                const previewDiv = document.createElement('div');
+                previewDiv.className = 'preview-item';
+                previewDiv.innerHTML = `
+                <h4>${name.trim()}</h4>
+                <textarea class="final-comment" rows="4">${builtComment.trim()}</textarea>
+            `;
+                container.appendChild(previewDiv);
+            });
+
+            if (hasContent) {
+                document.getElementById('preview-section').style.display = 'block';
+                document.getElementById('preview-section').scrollIntoView({ behavior: 'smooth' });
+                showToast("Comments generated!");
+            } else {
+                alert("No students to process.");
+            }
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            if (msg) t.innerText = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        // --- Export ---
+        async function downloadDocx() {
+            if (typeof docx === 'undefined') {
+                alert("Error: Still loading libraries. Please wait or check your connection.");
+                return;
+            }
+
+            const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } = docx;
+            const previewItems = document.querySelectorAll('.preview-item');
+            if (previewItems.length === 0) return;
+
+            const headerText = currentSheetName ? `Students List ${currentSheetName}` : "Students List";
+            const children = [
+                new Paragraph({
+                    text: headerText,
+                    heading: HeadingLevel.HEADING_1,
+                    alignment: AlignmentType.CENTER,
+                    spacing: { after: 400 }
+                })
+            ];
+
+            previewItems.forEach((item, index) => {
+                const name = item.querySelector('h4').innerText;
+                const text = item.querySelector('textarea').value;
+
+                children.push(new Paragraph({
+                    children: [new TextRun({ text: `${index + 1}. ${name}`, bold: true, size: 28, color: "4f46e5" })],
+                    spacing: { before: 400, after: 100 }
+                }));
+                children.push(new Paragraph({
+                    children: [new TextRun({ text: text, size: 24 })],
+                    spacing: { after: 300 }
+                }));
+            });
+
+            try {
+                const doc = new Document({
+                    sections: [{ properties: {}, children: children }],
+                });
+
+                const blob = await Packer.toBlob(doc);
+                if (typeof saveAs !== 'undefined') {
+                    saveAs(blob, "Generated_Comments.docx");
+                } else {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = "Generated_Comments.docx";
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+                }
+            } catch (err) {
+                alert("Export error: " + err.message);
+            }
+        }
+
+        function downloadTxt() {
+            const previewItems = document.querySelectorAll('.preview-item');
+            if (previewItems.length === 0) {
+                alert("No comments to export. Generate comments first.");
+                return;
+            }
+
+            let content = "";
+            previewItems.forEach((item, index) => {
+                const name = item.querySelector('h4').innerText;
+                const text = item.querySelector('textarea').value;
+                content += `${index + 1}. ${name}:\n${text}\n\n`;
+            });
+
+            const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+            if (typeof saveAs !== 'undefined') {
+                saveAs(blob, "Generated_Comments.txt");
+            } else {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = "Generated_Comments.txt";
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+            }
+        }
+    </script>
+
+</body>
+
+</html>

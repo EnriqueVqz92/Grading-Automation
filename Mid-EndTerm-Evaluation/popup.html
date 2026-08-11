@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ManageBac Automator</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>ManageBac Automator</h1>
+      <p>Quick Grades & Comments</p>
+    </header>
+
+    <main>
+      <!-- Step 1: File Uploads -->
+      <section class="card" id="step1">
+        <h2>1. Upload Data Files</h2>
+        
+        <div class="file-drop-area">
+          <label for="txtUpload" class="file-label">
+            <span class="file-icon">📄</span>
+            <span id="txtUploadLbl">Select Comments (.txt)</span>
+          </label>
+          <input type="file" id="txtUpload" accept=".txt">
+        </div>
+
+        <div class="file-drop-area">
+          <label for="excelUpload" class="file-label">
+            <span class="file-icon">📊</span>
+            <span id="excelUploadLbl">Select Grades (.xlsx, .numbers)</span>
+          </label>
+          <input type="file" id="excelUpload" accept=".xlsx, .xls, .numbers">
+        </div>
+      </section>
+
+      <!-- Step 2: Excel Configuration (Hidden until Excel is uploaded) -->
+      <section class="card hidden" id="step2">
+        <h2>2. Configure Columns</h2>
+        
+        <div class="form-group">
+          <label for="sheetSelect">Select Sheet</label>
+          <select id="sheetSelect"></select>
+        </div>
+
+        <div class="criteria-grid">
+          <div class="form-group">
+            <label for="critA">Criterion A</label>
+            <select id="critA" class="crit-select"><option value="">-- Skip --</option></select>
+          </div>
+          <div class="form-group">
+            <label for="critB">Criterion B</label>
+            <select id="critB" class="crit-select"><option value="">-- Skip --</option></select>
+          </div>
+          <div class="form-group">
+            <label for="critC">Criterion C</label>
+            <select id="critC" class="crit-select"><option value="">-- Skip --</option></select>
+          </div>
+          <div class="form-group">
+            <label for="critD">Criterion D</label>
+            <select id="critD" class="crit-select"><option value="">-- Skip --</option></select>
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1; margin-top: 5px; margin-bottom: 5px;">
+            <label>Learner Profile Attribute:</label>
+            <div class="multiselect-container" id="learnerProfileContainer" style="margin-top: 4px;">
+              <div class="multiselect-header" id="learnerProfileHeader">-- Do not select --</div>
+              <div class="multiselect-dropdown hidden" id="learnerProfileDropdown">
+                <label><input type="checkbox" value="inquirers"> Inquirers</label>
+                <label><input type="checkbox" value="knowledgeable"> Knowledgeable</label>
+                <label><input type="checkbox" value="thinkers"> Thinkers</label>
+                <label><input type="checkbox" value="communicators"> Communicators</label>
+                <label><input type="checkbox" value="principled"> Principled</label>
+                <label><input type="checkbox" value="open_minded"> Open-minded</label>
+                <label><input type="checkbox" value="caring"> Caring</label>
+                <label><input type="checkbox" value="risk_takers"> Risk-takers (Courageous)</label>
+                <label><input type="checkbox" value="balanced"> Balanced</label>
+                <label><input type="checkbox" value="reflective"> Reflective</label>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="colPart">Participation</label>
+            <select id="colPart" class="crit-select"><option value="">-- Skip --</option></select>
+          </div>
+          <div class="form-group">
+            <label for="colEffort">Effort</label>
+            <select id="colEffort" class="crit-select"><option value="">-- Skip --</option></select>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 3: Preferences -->
+      <section class="card">
+        <h2>3. Preferences</h2>
+        
+        <div class="pref-row">
+          <label>If Grade cell is EMPTY in Excel:</label>
+          <select id="emptyPref">
+            <option value="1">Do nothing (Leave as is)</option>
+            <option value="2">Mark as N/A</option>
+          </select>
+        </div>
+
+        <div class="pref-row">
+          <label>For Skipped Criteria:</label>
+          <select id="skipPref">
+            <option value="1">Do nothing (Leave as is)</option>
+            <option value="2">Mark as N/A</option>
+          </select>
+        </div>
+
+        <div class="pref-row" style="align-items: flex-start;">
+          <label>Participation & Effort:<br><span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">(4=Proficient, 3=Capable, 2=Approaching expectations, 1=Below expectations)</span></label>
+          <select id="partEffortPref">
+            <option value="skip">Ignorar (No hacer nada)</option>
+            <option value="overwrite">Agregar / Sobreescribir</option>
+            <option value="clear">Deseleccionar todo (Dejar en blanco)</option>
+          </select>
+        </div>
+
+        <div class="pref-row">
+          <label>ManageBac Comments Mode:</label>
+          <select id="commentPref">
+            <option value="1">Overwrite existing comments</option>
+            <option value="2">Paste ONLY if empty</option>
+            <option value="3">Paste ONLY if empty (Use general phrase, ignore .txt)</option>
+            <option value="4">Overwrite existing comments (Use general phrase, ignore .txt)</option>
+          </select>
+        </div>
+        
+        <div class="pref-row hidden" id="extraTextRow">
+          <label>General Phrase to Add:</label>
+          <input type="text" id="extraText" placeholder="Phrase to paste to all empty comments" style="width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; margin-top: 4px;" />
+        </div>
+
+      </section>
+
+      <div id="statusMessage" class="status"></div>
+
+      <button id="runBtn" class="btn-primary" disabled>
+        Run Automation <span class="arrow">→</span>
+      </button>
+
+    </main>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
